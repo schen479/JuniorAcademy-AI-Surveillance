@@ -1,0 +1,23 @@
+sequenceDiagram
+
+   %% Subjects %%
+   
+   participant A as AI Model
+   participant P as Processor
+   participant C as Camera
+   participant SM as Store Owner's Messenger
+
+   C ->> P: Gives footage feed 
+   P ->> P: Process features
+   P ->> A: Send footage features
+
+   A ->> A: Analyze potential objects
+   A ->> A: Analyze potential people
+
+   A ->> P: Gives object data
+   A ->> P: Gives people data
+   P ->> P: Check positions of objects
+   P ->> P: Objects Are located in person
+   P ->> A: Flag potential shoplifting
+   A ->> A: Memorize event sequence
+   A ->> SM: Alert owner of shoplifting
