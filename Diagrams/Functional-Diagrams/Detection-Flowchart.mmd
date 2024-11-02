@@ -1,0 +1,48 @@
+graph TD;
+
+    %% Data Bases %%
+
+
+    
+    %% Events %%
+
+    DM(Detected Motion)
+
+
+    %% Actions %%
+
+    SCF[Surveillance Camera Feed]
+    IP[Image processing]
+    FE[Feature Extraction]
+    AlSe[Alert Security]
+    CM[Continue Monitoring]  
+    RSA[Record Suspicious Activity]
+    BFs[Blur faces]
+
+
+    %% Conditions %%
+
+    ISA{Is Suspicious Activity}
+    ITP{Is There Person}
+
+    %% Connections %%
+
+    subgraph Camera
+        SCF
+    end
+
+    subgraph AI Model
+
+
+        subgraph Processing
+            SCF --> IP
+            FE --> DM
+            IP --> FE
+            DM -- motion --> ISA
+            DM --> ITP
+
+            ISA -- True --> AlSe
+            AlSe --> RSA
+            ISA -- False --> CM
+        end
+    end
