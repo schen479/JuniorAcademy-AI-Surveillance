@@ -10,16 +10,6 @@ import pytz
 
 model_path = "JuniorAcademy-AI-Surveillance\pose_landmarker_full.task"
 
-BaseOptions = mp.tasks.BaseOptions
-PoseLandmarker = mp.tasks.vision.PoseLandmarker
-PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
-VisionRunningMode = mp.tasks.vision.RunningMode
-
-options = PoseLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=model_path),
-    running_mode=VisionRunningMode.VIDEO)
-
-with PoseLandmarker.create_from_options(options) as landmarker:
 
 #Shubh
 #Get objects of the shelves that are subjected to shoplifting using YOLO. 
@@ -47,6 +37,22 @@ def get_Obj(frame):
 #Stephen
 #Returns the points of a person's body using OpenPose
 def get_Pose_Points(frame):
+  BaseOptions = mp.tasks.BaseOptions
+  PoseLandmarker = mp.tasks.vision.PoseLandmarker
+  PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
+  VisionRunningMode = mp.tasks.vision.RunningMode
+
+  options = PoseLandmarkerOptions(
+    base_options=BaseOptions(model_asset_path=model_path),
+    running_mode=VisionRunningMode.VIDEO)
+
+  with PoseLandmarker.create_from_options(options) as landmarker: 
+    mp_frame = mp.Image(image_format = mp.ImageFormat.SRGB, data = frame)
+    pose_result = landmarker.detect(mp_frame)
+
+    if pose_result.pose_landmarks:
+      for landmark in pose_results.pose_landmarks.landmark:
+        x, y = int(landmark.x * fran.) 
 
 #Alan
 #Takes in the body points and location of items in the store and
