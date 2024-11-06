@@ -25,6 +25,22 @@ with PoseLandmarker.create_from_options(options) as landmarker:
 #Get objects of the shelves that are subjected to shoplifting using YOLO. 
 def get_Obj(frame): 
     # define objects ex. soda cans, box of cereals
+  results = model(frame)
+  detections = results.xyxy[0]
+
+  for *box, conf, cls in detections:
+    x1, y1, x2, y2 = map(int, box)
+    label = model.names[int(cls)]
+    objs.append({
+      'label' = label,
+      'confidence' = float(conf),
+      'box' = [x1, y1, x2, y2]
+    })
+    
+    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    cv2.putText(frame, f'{label} {conf:.2f}', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    
+  return frame;
 
 
     
