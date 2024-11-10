@@ -7,6 +7,11 @@ graph TD;
     %% Events %%
 
     DM(Detected Motion)
+    CPRfO(Caught Person Reaching for Object)
+    CPUO(Caught Person Using Object)
+    PPBO(Caught Person Returning Object)
+    PPBO(Caught Person Putting Object Inside Their Bag)
+    PPBO(Caught Person Putting Object Inside Bag)
 
 
     %% Actions %%
@@ -17,13 +22,40 @@ graph TD;
     AlSe[Alert Security]
     CM[Continue Monitoring]  
     RSA[Record Suspicious Activity]
-    BFs[Blur faces]
 
+    BFs[Blur face]
+    UBFs[Unblur face]
+
+    %% Tagging Types 
+    TSCt[Tag Store Cart]
+
+    %% Shoplifter Actions
+    UtS[Untrack Shoplifter]
+
+    %% Process Types
+    PO[Process Objects]
+    PP[Process People]
+    PPA[Process Person's Accessories - masks, clothing]
+
+    %% Track Types
+    TPfO[Track Position Of Object]
+    TPfP[Track Position Of Person]
+    TPfPA[Track Position Of Person's Accessories]
+
+    TS[Track Shoplifter]
+    UtS[Untrack Shoplifter]
+
+    TPfPPP[Track Pose Points Of Person]
 
     %% Conditions %%
 
     ISA{Is Suspicious Activity}
+    IsP{Is Person}
+    IsO{Is Object}
+    IsA{Is Accessory}
     ITP{Is There Person}
+    DPPfO{Did Person Pay For Object}
+    DPhSCt{Did Person Have Shop Cart}
 
     %% Connections %%
 
@@ -36,13 +68,44 @@ graph TD;
 
         subgraph Processing
             SCF --> IP
-            FE --> DM
             IP --> FE
-            DM -- motion --> ISA
-            DM --> ITP
 
-            ISA -- True --> AlSe
-            AlSe --> RSA
-            ISA -- False --> CM
+            subgraph Physical Features Extraction
+                %% Person Feature Extraction
+                FE --> PP
+
+                PP --> IsP
+
+                IsP --> TPfP
+                IsP --> TPfPPP
+
+                %% Object Feature Extraction
+                FE --> PO
+                PO --> IsO
+                IsO --> TPfO
+            end
+            
+            %% Movement Tracking
+            subgraph Movement Tracking
+                
+                TPfP --> DM
+                TPfPPP --> DM
+                TPfO --> DM
+
+                DM -- motion --> ISA
+                DM --> ITP
+
+                %% When there is Suspicious Activity
+                ITP -- True --> BFs
+                ISA -- True --> UBFs
+
+                %% When there isn't Suspicious Activity
+                ISA -- False --> CM
+            end
+            
+            subgraph Alerting
+                ISA -- True --> AlSe
+                AlSe --> TS
+            end
         end
     end
