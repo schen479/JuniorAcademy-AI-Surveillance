@@ -31,6 +31,8 @@ graph TD;
 
     %% Alerting Actions
     AlSe[Alert Security]
+    GCT[Get Current Time]
+    GToIn[Get Time Of Incident]
     MO[Messsage Owner]
     SFtoOwn[Send Footage to Owner]
 
@@ -68,6 +70,7 @@ graph TD;
     IsP{Is Person}
     IsO{Is Object}
     IsSCt{Is Shopping Cart}
+    IsSCt2{Is Shopping Cart}
     IsA{Is Accessory}
     ITP{Is There Person}
     DPPfP{Did Person Pay For Products}
@@ -124,6 +127,11 @@ graph TD;
                 DM --> PWPC
 
                 PWPC --> DPPfP
+
+                CPRfO --> CPUO
+                CPRfO --> PPBO
+
+                PPBO --> IsSCt2
                 
                 %% Motion Condition
                 DM -- motion --> ISA
@@ -135,7 +143,7 @@ graph TD;
                 ISA --> PPBO
 
                 CPUO --True--> S
-                PPBO --True--> S
+                IsSCt2 --False--> S
                 DPPfP --False--> S
 
                 S --> UBFs
@@ -146,7 +154,7 @@ graph TD;
             end
             
             subgraph Alerting
-                S --> AlSe
+                S --> GCT --> GToIn --> AlSe
 
                 AlSe --> MO
                 AlSe --> SFtoOwn
