@@ -68,44 +68,41 @@ def get_Pose_Points(frame, timestamp):
     mp_frame = mp.Image(image_format = mp.ImageFormat.SRGB, data = frame)
     pose_result = landmarker.detect_for_video(mp_frame, timestamp)
 
-
     if pose_result.pose_landmarks:
-      for landmark in pose_result.pose_landmarks:
+      for landmark in pose_result.pose_landmarks[0]:
+        
         x, y = int(landmark.x * frame.shape[0]), int(landmark.y * frame.shape[1])
         cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
-
-
-    if pose_result.pose_landmarks:
-        return pose_result.pose_landmarks
+      
+      return pose_result.pose_landmarks[0]
     return None
 
 #Alan
 #Takes in the body points and location of items in the store and
 #detects for shoplifting if items are too close to certain body parts
-def detect_Anomaly(detected_objects, pose_points, frame_count, hand_to_pocket_threshold=0.05, disappearance_frames=5):
+def detect_Anomaly(pose_result, detected_objects, frame_count, threshold=10, disappearance_frames=5):
     # check if object is in hand of person
     is_suspicious = False
 
-    left_hand = (pose_points[mp_pose.PoseLandmark.LEFT_WRIST].x, pose_points[mp_pose.PoseLandmark.LEFT_WRIST].y)
-    right_hand = (pose_points[mp_pose.PoseLandmark.RIGHT_WRIST].x,pose_points[mp_pose.PoseLandmark.RIGHT_WRIST].y)
-    left_pocket = (pose_points[mp_pose.PoseLandmark.LEFT_HIP].x,pose_points[mp_pose.PoseLandmark.LEFT_HIP].y)
-    right_pocket = (pose_points[mp_pose.PoseLandmark.RIGHT_HIP].x,pose_points[mp_pose.PoseLandmark.RIGHT_HIP].y)
+    left_hand = pose_result[16]
+    right_hand = pose_result[15]
+    left_hip = pose_result[23] 
+    right_hip = pose_result[24]
     
     for obj in detected_objects:
-        obj_id = f"{obj['name']}_{int(obj['bbox'][0])}_{int(obj['bbox'][1])}"
-        
+      if is_near(obj, left_hand, right_hand, threshold):
+        obj_id = f"{obj['name']}"
         if obj_id not in object_tracker:
-            object_tracker[obj_id] = {
-                "last_seen": frame_count,
-                "status": "in_hand" if is_near(obj, left_hand, right_hand, threshold=hand_to_pocket_threshold) else "detected",
-            }
+          object_tracker[obj_id] = {
+            "last_seen": frame_count,
+            "near_pocket": True if is_near(obj, left_hip, right_hip, threshold) else False,
+          }
         else:
             object_tracker[obj_id]["last_seen"] = frame_count
-            if is_near(obj, left_pocket, right_pocket, threshold=hand_to_pocket_threshold):
-                object_tracker[obj_id]["status"] = "near_pocket"
+            object_tracker[obj_id]["near_pocket"] = True if is_near(obj, left_hip, right_hip, threshold) else False
 
     for obj_id, obj_data in list(object_tracker.items()):
-        if obj_data["status"] == "near_pocket" and (frame_id - obj_data["last_seen"]) > disappearance_frames:
+        if obj_data["status"] == "near_pocket" and (frame_count - obj_data["last_seen"]) > disappearance_frames:
             is_suspicious = True
             del object_tracker[obj_id]
             break
@@ -116,6 +113,13 @@ def detect_Anomaly(detected_objects, pose_points, frame_count, hand_to_pocket_th
 
     return is_suspicious
 
+def is_near(obj, left_hand, right_hand, threshold=0.05):
+    obj_center = ((obj['box'][0] + obj['box'][2]) / 2, (obj['box'][1] + obj['box'][3]) / 2)
+    return (
+        (abs(left_hand.x - obj_center[0]) < threshold and abs(left_hand.y - obj_center[1]) < threshold) or
+        (abs(right_hand.x - obj_center[0]) < threshold and abs(right_hand.y - obj_center[1]) < threshold)
+    )  
+
 #Stephen
 #Main function for parsing a video, dividing it into smaller clips, and running the Ai model to
 #see if there's an anomaly in each clip
@@ -125,7 +129,7 @@ def process_Video(video_path):
     frame_duration = 1 / fps  
 
     frame_count = 0
-    while frame_count < 2:
+    while frame_count < 100:
         ret, frame = cap.read()
        
         if not ret:
@@ -135,20 +139,22 @@ def process_Video(video_path):
         timestamp = int(timestamp * 1e6)
         frame_count += 1
 
-
         detected_objects = get_Obj(frame)  
         pose_landmarks = get_Pose_Points(frame, timestamp)
 
-
         if frame is not None and ret:
             cv2.imshow("Shoplifting Detector", frame)
-        is_suspicious = detect_Anomaly(pose_landmarks, detected_objects, frame_count)
-        send_Video(video_path, is_suspicious)
+        
+        if pose_landmarks is not None and detected_objects is not None:
+          print(detect_Anomaly(pose_landmarks, detected_objects, frame_count))
+        
+        # send_Video(video_path, is_suspicious)
         delete_Footage()
     print(is_suspicious)
     cap.release()
     cv2.destroyAllWindows()
 
 process_Video("Video\\video1.mp4")
+
 
 
