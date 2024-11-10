@@ -2,32 +2,45 @@ graph TD;
 
     %% Data Bases %%
 
+    %% Results %%
 
+    NS[Not Suspicious]
+    S[Suspicious]
     
     %% Events %%
 
     DM(Detected Motion)
+
     CPRfO(Caught Person Reaching for Object)
+    PPRO(Caught Person Returning Object)
+    PWPC(Person Walking Pass Cashier)
+
+    %% Suspicious Events
     CPUO(Caught Person Using Object)
-    PPBO(Caught Person Returning Object)
-    PPBO(Caught Person Putting Object Inside Their Bag)
     PPBO(Caught Person Putting Object Inside Bag)
 
+    %% Footage Events
+    FFP5M(Footage Frame Passed 5 minutes)
 
     %% Actions %%
 
     SCF[Surveillance Camera Feed]
     IP[Image processing]
     FE[Feature Extraction]
-    AlSe[Alert Security]
-    CM[Continue Monitoring]  
-    RSA[Record Suspicious Activity]
+    CM[Continue Monitoring]
 
+    %% Alerting Actions
+    AlSe[Alert Security]
+    MO[Messsage Owner]
+    SFtoOwn[Send Footage to Owner]
+
+    %% Footage Actions
+    DEF[Delete Expired Footage]
     BFs[Blur face]
     UBFs[Unblur face]
 
     %% Tagging Types 
-    TSCt[Tag Store Cart]
+    TSCt[Tag Object as Shopping Cart]
 
     %% Shoplifter Actions
     UtS[Untrack Shoplifter]
@@ -35,11 +48,13 @@ graph TD;
     %% Process Types
     PO[Process Objects]
     PP[Process People]
+    POT[Process Object Type]
     PPA[Process Person's Accessories - masks, clothing]
 
     %% Track Types
     TPfO[Track Position Of Object]
     TPfP[Track Position Of Person]
+    TFT[Track Frame Time]
     TPfPA[Track Position Of Person's Accessories]
 
     TS[Track Shoplifter]
@@ -52,9 +67,10 @@ graph TD;
     ISA{Is Suspicious Activity}
     IsP{Is Person}
     IsO{Is Object}
+    IsSCt{Is Shopping Cart}
     IsA{Is Accessory}
     ITP{Is There Person}
-    DPPfO{Did Person Pay For Object}
+    DPPfP{Did Person Pay For Products}
     DPhSCt{Did Person Have Shop Cart}
 
     %% Connections %%
@@ -76,36 +92,79 @@ graph TD;
 
                 PP --> IsP
 
-                IsP --> TPfP
-                IsP --> TPfPPP
+                IsP --True--> TPfP
+                IsP --True--> TPfPPP
+                IsP --> DPhSCt
 
                 %% Object Feature Extraction
                 FE --> PO
                 PO --> IsO
-                IsO --> TPfO
+                IsO --True--> TPfO
+                IsO --True--> PPA
+                IsO --True--> POT
+
+                DPhSCt --True--> TPfO
+
+                POT --> IsSCt
+
+                IsSCt --True--> TSCt
+
+                PPA --> IsA
+                IsA --True--> TPfPA
             end
             
             %% Movement Tracking
             subgraph Movement Tracking
-                
+                TPfPA --> DM
                 TPfP --> DM
                 TPfPPP --> DM
                 TPfO --> DM
 
+                DM --> CPRfO
+                DM --> PWPC
+
+                PWPC --> DPPfP
+                
+                %% Motion Condition
                 DM -- motion --> ISA
                 DM --> ITP
+                ITP -- True --> BFs
 
                 %% When there is Suspicious Activity
-                ITP -- True --> BFs
-                ISA -- True --> UBFs
+                ISA --> CPUO
+                ISA --> PPBO
+
+                CPUO --True--> S
+                PPBO --True--> S
+                DPPfP --False--> S
+
+                S --> UBFs
 
                 %% When there isn't Suspicious Activity
-                ISA -- False --> CM
+                ISA -- False --> NS
+                NS --> CM
             end
             
             subgraph Alerting
-                ISA -- True --> AlSe
-                AlSe --> TS
+                S --> AlSe
+
+                AlSe --> MO
+                AlSe --> SFtoOwn
+            end
+
+            subgraph Suspect Tracking
+                 AlSe --> TS
+
+                 TS --> PPRO
+                 PPRO --> UtS
+                 PPRO --> BFs
+            end
+
+            subgraph Frame Tracking
+                SCF --> TFT --> FFP5M
+                FFP5M --> ISA
+                NS --> DEF
+
             end
         end
     end
