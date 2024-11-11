@@ -87,6 +87,9 @@ def detect_Anomaly(pose_result, detected_objects, frame_count, threshold=10, dis
       if obj_data["status"] == "near_pocket" and (frame_count - obj_data["last_seen"]) > disappearance_frames:
           is_suspicious = True
           del object_tracker[obj_id]
+
+          suspectDesc = {}
+          alertOwner("stealing", suspectDesc)
           break
 
   for obj_id in list(object_tracker.keys()):
@@ -110,16 +113,16 @@ Parameters:
     reason - string - possible reasons of found in ['stealing', 'violating products']
     suspectDesc - dictionary describing suspect's details
         'race', 'hairColor', 'isWearingGlasses', 'shirtColor', 'leggingColor', 'height'
+    image - image frame in the video that shows the suspect stealing
 '''
-def alertOwner(reason, suspectDesc):
+def alertOwner(reason, suspectDesc, image):
 
     # send text
     current_time = datetime.datetime.now(tz=pytz.UTC)
     message = "Shoplifting Detected at: " + str(current_time) + "\n Subject is possibly " + reason
-    suspectDescText = "Subject is "
 
     print(current_time)
     print(message)
-    pri
-    # send video frame of event
 
+    # send video frame of event
+    

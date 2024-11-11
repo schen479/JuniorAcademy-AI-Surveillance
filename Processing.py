@@ -4,7 +4,9 @@ import torch
 import mediapipe as mp
 import warnings
 import os
-import datetime
+import time
+import shutil
+
 
 
 BaseOptions = mp.tasks.BaseOptions
@@ -28,15 +30,17 @@ object_tracker = {}
 # #Stephen
 # #Send a video to one of two server (local servers used for testing). If anomaly is detected, send to central
 # #if no anomaly is detected, save temporarily in local server.
-def send_Video(path, suspicion):
-  return 0
-
-
+def send_Video(path, is_suspicious):
+  server_path = "Main" if is_suspicious else "Side"
+  shutil.move(path, server_path)
+  
 # #Shubh
 # #Deletes all footage if no anomaly is detected in 5 minutes
 def delete_Footage():
-  return 0
-
+  start = time.time()
+  end = start
+  while (not is_suspicious) or (end - start > 300):
+    end = time.time()
 
 #Shubh
 #Get objects of the shelves that are subjected to shoplifting using YOLO.
