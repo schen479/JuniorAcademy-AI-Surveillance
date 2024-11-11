@@ -1,3 +1,8 @@
+### **Tips on finding videos:**
+- Youtube News Outlets
+- Police Department Achives
+- Stock videos
+
 ### Source: **Getty Images** 
 #### https://www.gettyimages.com/videos/security-camera-store
 
