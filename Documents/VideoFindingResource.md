@@ -13,3 +13,6 @@
 
 ### Youtube Channels
 - https://www.youtube.com/@ChicagoPoliceNews/videos
+
+### Searched Video Sources:
+- https://www.gettyimages.com/detail/video/young-couple-stealing-merchandise-from-convenience-stock-video-footage/1368-19
