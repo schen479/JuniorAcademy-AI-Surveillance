@@ -155,8 +155,8 @@ def process_Video(video_path):
     cap.release()
     cv2.destroyAllWindows()
 
-process_Video("Video\\video1.mp4")
-send_Video("Video\\video1.mp4")
+process_Video("Video/video1.mp4")
+send_Video("Video/video1.mp4")
 delete_Footage()
 
 
